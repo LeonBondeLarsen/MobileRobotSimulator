@@ -45,9 +45,10 @@ class State(object):
         self.velocity = Velocity(linear, angular)
 
 class Agent(object):
-    def __init__(self, x=60, y=60, orientation=0, linear=1, angular=0, agent_color='r'):
-        self.state = State(x, y, orientation, linear, angular)
+    def __init__(self,linear=1, angular=0, agent_color='r'):
         self.map = Map()
+        self.start_state = self.map.getRandomCollisionFreeState()
+        self.state = State(self.start_state[0], self.start_state[1], self.start_state[2], linear, angular)
         self.pixels_per_meter = 20  # TODO: Make mutator or include in constructor
         self.type = agent_color
         self.sensor = Sensor()
@@ -63,6 +64,19 @@ class Agent(object):
         noise = np.random.normal(self.actuator_noise.mean,self.actuator_noise.variance,2)
         (self.state.velocity.linear,self.state.velocity.angular) = self.controller.getAction() + noise
         
-        
-        
+    def getSensorRange(self):
+        return self.sensor.range
+    
+    def getSensor1(self):  
+        return self.sensor.scan_angles[0]
+
+    def getSensor2(self):  
+        return self.sensor.scan_angles[1]
+    
+    def getGain(self):  
+        return self.controller.gain
+    
+    def generateNewRandomState(self):
+        self.new_state = self.map.getRandomCollisionFreeState()
+        self.state = State(self.new_state[0], self.new_state[1], self.new_state[2], self.state.velocity.linear, self.state.velocity.angular)
         

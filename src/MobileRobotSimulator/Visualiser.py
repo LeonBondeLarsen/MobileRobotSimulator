@@ -12,6 +12,7 @@
     
     Visualiser interfaces the MobileRobotSimulator to pyplot
 '''
+import numpy as np
 import matplotlib.cm as cm
 from matplotlib import pyplot as plt
 from MobileRobotSimulator.Map import Map
@@ -34,18 +35,37 @@ class Visualiser(object):
         self.figure = plt.figure(num='Robot simulator', figsize=(8, 8), dpi=80, facecolor='w', edgecolor='k')
         self.figure.canvas.draw()
         self.agent_posteriors = []
+        self.sensors_x = []
+        self.sensors_y = []
     
     def plotAgent(self, index, agent):
-        if len(self.agent_posteriors) <= index:
+        while len(self.agent_posteriors) <= index:
             self.agent_posteriors.append(Posterior())
         
         self.agent_posteriors[index].push(agent.state.position.x, agent.state.position.y, agent.type)
         self.figure.gca().plot(agent.state.position.x, agent.state.position.y, agent.type+'o')
+        self.plotSensor(agent)
+        
+    def resetAgentPosterior(self, index):
+        while len(self.agent_posteriors) <= index:
+            self.agent_posteriors.append(Posterior())
+        self.agent_posteriors[index] = Posterior()
+    
+    def plotSensor(self, agent):
+        for i in range(agent.sensor.range) :
+            self.sensors_x.append( agent.state.position.x  + (i * np.cos(agent.state.orientation + agent.sensor.scan_angles[0])) )
+            self.sensors_y.append( agent.state.position.y + (i * np.sin(agent.state.orientation+ agent.sensor.scan_angles[0])) )       
+            self.sensors_x.append( agent.state.position.x  + (i * np.cos(agent.state.orientation + agent.sensor.scan_angles[1])) )
+            self.sensors_y.append( agent.state.position.y + (i * np.sin(agent.state.orientation+ agent.sensor.scan_angles[1])) )       
+        
         
     def draw(self):
         for agent_index in range(len(self.agent_posteriors)):
             self.figure.gca().plot(self.agent_posteriors[agent_index].x, self.agent_posteriors[agent_index].y,self.agent_posteriors[agent_index].agent_type)
+        self.figure.gca().plot(self.sensors_x, self.sensors_y,',k')
         self.figure.canvas.draw()
         self.figure.clf()
         self.figure.gca().imshow(self.map.image, cmap = cm.Greys_r)
+        self.sensors_x = []
+        self.sensors_y = []
         

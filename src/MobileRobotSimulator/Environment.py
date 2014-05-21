@@ -15,8 +15,9 @@ from MobileRobotSimulator.Map import Map
 from MobileRobotSimulator.Visualiser import Visualiser
 
 class Environment(object):
-    def __init__(self):
+    def __init__(self, obstacles):
         self.map = Map()
+        self.map.setObstacles(obstacles)
         self.agents = []
         self.visualiser = Visualiser()
         self.visualise = True
@@ -31,6 +32,7 @@ class Environment(object):
         self.actuator_noise.variance = variance
 
     def takeStep(self):
+        collisions = []
         for agent_index in range(len(self.agents)):
             self.agents[agent_index].update()
             if not self.map.inCollision((self.agents[agent_index].state.position.x, self.agents[agent_index].state.position.y)) :
@@ -38,17 +40,15 @@ class Environment(object):
                     self.agents[agent_index].state.position.x = self.agents[agent_index].state.position.x + ( self.agents[agent_index].state.velocity.linear * np.cos(self.agents[agent_index].state.orientation) * self.stepsize * self.agents[agent_index].pixels_per_meter)
                     self.agents[agent_index].state.position.y = self.agents[agent_index].state.position.y + ( self.agents[agent_index].state.velocity.linear * np.sin(self.agents[agent_index].state.orientation) * self.stepsize * self.agents[agent_index].pixels_per_meter)
                     self.agents[agent_index].state.orientation = self.agents[agent_index].state.orientation + (self.agents[agent_index].state.velocity.angular * self.stepsize)
+                else :
+                    collisions.append(agent_index)
+            else :
+                collisions.append(agent_index)
             if self.visualise :
                 self.visualiser.plotAgent(agent_index, self.agents[agent_index])
-        self.visualiser.draw()
-    
-    def run(self, max_iterations):
-        iterations = 0
-        while iterations < max_iterations :
-            iterations += 1
-            self.takeStep()
-        self.visualiser.figure.savefig('last_run.png')
-        print 'Completed ' + str(iterations) + ' iterations'
+        if self.visualise :
+            self.visualiser.draw()
+        return collisions
         
     def agentCollision(self, index):  
         out = False       

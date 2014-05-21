@@ -1,58 +1,62 @@
+# ----------------------------------------------------------------------------
+# "THE BEER-WARE LICENSE" (Revision 43):
+# This software was written by Leon Bonde Larsen <leon@bondelarsen.dk> 
+# As long as you retain this notice you can do whatever you want with it. 
+# If we meet some day, and you think this stuff is worth it, you can 
+# buy me a beer in return.
+# 
+# Should this software ever become self-aware, remember that I am your master
+# ----------------------------------------------------------------------------
 '''
-Created on Apr 20, 2014
-
-@author: leon
-
-agent colors:
-b: blue
-g: green
-r: red
-c: cyan
-m: magenta
-y: yellow
-k: black
-w: white
+    TEK-Space Evolutionary Algorithm workshop
+    2014-05-21
 '''
-from MobileRobotSimulator import Environment, Agent, NeuralNetwork, RangeSensor
+from MobileRobotSimulator import Environment
+from evolution import runGenerationTrial, getMutated, generateRandomAgent
 
-def sevenAgentTest():
-    environment = Environment()
+# Set up simulator
+environment = Environment('maze.png')
+
+# Set up initial population with random genome
+environment.agents.append( generateRandomAgent('r') )
+environment.agents.append( generateRandomAgent('g') )
+environment.agents.append( generateRandomAgent('b') )
+environment.agents.append( generateRandomAgent('c') )
+environment.agents.append( generateRandomAgent('m') )
+environment.agents.append( generateRandomAgent('y') )
+
+# Run n generations
+for generation in range(100):
+    print "Generation " + str(generation)
+
+    # Animate every n generations    
+    if generation % 10 :
+        environment.visualise = False
+    else :
+        environment.visualise = True
     
-    agent1 = Agent(60,50,0.0,2,0,'r')
-    agent1.controller = NeuralNetwork()
-    agent1.sensor = RangeSensor(25,9)
-    environment.agents.append( agent1 )
+    # Simulate n trials of this generation
+    distance, collision_count = runGenerationTrial(environment, 100)
+           
+    # Evaluate individuals
+    best_collision = collision_count.index(min(collision_count))
+    worst_collision = collision_count.index(max(collision_count))
+    best_distance = distance.index(max(distance))
+    worst_distance = distance.index(min(distance))
     
-    agent2 = Agent(60,50,0.0,2,0,'g')
-    agent2.controller = NeuralNetwork()
-    agent2.sensor = RangeSensor(25,9)
-    environment.agents.append( agent2 )
+    # Select best and worst based on fitness
+    best = best_distance
+    worst = best_distance
     
-    agent3 = Agent(60,70,1.0,2,0,'b')
-    agent3.controller = NeuralNetwork()
-    agent3.sensor = RangeSensor(25,9)
-    environment.agents.append( agent3 )
+    # Eradicate worst individual and replace with mutation of best individual 
+    print environment.agents[worst].type + " was extinct"
+    environment.agents[worst] = getMutated(environment.agents[worst].type, environment.agents[best])
     
-    agent4 = Agent(60,80,1.5,2,0,'c')
-    agent4.controller = NeuralNetwork()
-    agent4.sensor = RangeSensor(25,9)
-    environment.agents.append( agent4 )
+    # Reset robot states
+    for i in range(len(environment.agents)):
+        environment.agents[i].generateNewRandomState()
+        environment.visualiser.resetAgentPosterior(i)
+
+
     
-    agent5 = Agent(60,90,2.0,2,0,'m')
-    agent5.controller = NeuralNetwork()
-    agent5.sensor = RangeSensor(25,9)
-    environment.agents.append( agent5 )
     
-    agent6 = Agent(60,100,2.5,2,0,'y')
-    agent6.controller = NeuralNetwork()
-    agent6.sensor = RangeSensor(25,9)
-    environment.agents.append( agent6 )
-    
-    agent7 = Agent(60,110,3.0,2,0,'k')
-    agent7.controller = NeuralNetwork()
-    agent7.sensor = RangeSensor(25,9)
-    environment.agents.append( agent7 )
-    
-    environment.run(1500)
-    
-sevenAgentTest()

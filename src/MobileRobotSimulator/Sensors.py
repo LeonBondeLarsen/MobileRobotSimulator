@@ -23,10 +23,11 @@ class Sensor(object):
         return None
     
 class RangeSensor(Sensor):  # TODO: Add angle
-    def __init__(self, max_distance, number_of_lines):
+    def __init__(self, max_distance, number_of_lines, angles):
         super(RangeSensor, self).__init__()
         self.range = max_distance
         self.scan_lines = number_of_lines
+        self.scan_angles = angles
     
     def rayTrace(self,(x,y), angle):
         out = self.range
@@ -41,7 +42,7 @@ class RangeSensor(Sensor):  # TODO: Add angle
     def read(self, state):
         out = []
         for i in range(self.scan_lines) :
-            out.append(self.rayTrace((state.position.x, state.position.y), state.orientation + i*(2*np.pi/self.scan_lines)))
+            out.append(self.rayTrace((state.position.x, state.position.y), state.orientation + self.scan_angles[i]))
         #noise = np.random.normal(self.sensor_noise[0],self.sensor_noise[1],len(out))
         return out
     

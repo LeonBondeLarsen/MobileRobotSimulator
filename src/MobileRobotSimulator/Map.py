@@ -27,10 +27,27 @@ class Map(Singleton):
     def __init__(self):
         if not self._initialised:
             self._initialised = True
-            self.image = np.array(Image.open('maze.png').convert('L')) # TODO: make mutator
+            self.image = None
+            self.image_size = None
+            self.state_range = None
     
-    def inCollision(self,(x,y)):         
-        return self.image[y,x] < 128
+    def setObstacles(self, obstacles):
+        self.image = np.array(Image.open(obstacles).convert('L'))
+        self.image_size = np.shape(self.image)
+        self.state_range = [self.image_size[1]-2, self.image_size[0]-2, 2*np.pi, 0]
+    
+    def inCollision(self,(x,y)):  
+        if x < self.image_size[1]-1 and y < self.image_size[0]-1 and x > 5 and y > 5:    
+            return self.image[y,x] < 128
+        else:
+            return True
     
     def getSize(self):
         return reversed(self.image.shape)
+    
+    def getRandomCollisionFreeState(self):
+        p = np.random.random(4)*self.state_range
+        while self.inCollision((p[0], p[1])) :
+            p = np.random.random(4)*self.state_range
+        return p
+        
